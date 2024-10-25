@@ -7,6 +7,5 @@ const dbConn = mysql.createConnection({
     password: "",
     database: "student-registration"
 })
-
 dbConn.query = util.promisify(dbConn.query).bind(dbConn);
 module.exports = dbConn;

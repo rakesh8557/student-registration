@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Alert from "./Alert";
+
 
 const Home = () => {
 
@@ -8,6 +10,8 @@ const Home = () => {
     const [students, setStudents] = useState(null);
     const [user, setUser] = useState("");
     const [filter, setfilter] = useState("");
+    const [nameFilter, setNameFilter] = useState("");
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         axios.get("http://localhost:8000/api/students/getAllstudents", { withCredentials: true })
@@ -31,24 +35,42 @@ const Home = () => {
     }
 
     useEffect(() => {
-        if (!filter) return;
-        axios.get("http://localhost:8000/api/students/getAllstudents", { params: { filter }, withCredentials: true })
+        axios.get("http://localhost:8000/api/students/getAllstudents", { params: { filter, nameFilter }, withCredentials: true })
             .then(res => {
                 setStudents(res.data.students);
             })
             .catch(error => {
-
+                setError(error.response.data.message);
+                setTimeout(() => {
+                    setError(null);
+                }, 2000);
             })
-    }, [filter]);
+    }, [filter, nameFilter]);
+
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return function (...args) {
+            if(timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func(...args);
+            }, delay);
+        }
+    }
+
+    const handleNamefilter = debounce((event) => {
+        setNameFilter(event.target.value);
+    }, 1000);
 
     return (
         <>
             {!students && <div>Loading...</div>}
+            {error && <Alert message={error + ` with name `+  nameFilter + " found"}/>}
             <div className="home-container">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <h1 style={{ margin: '0', textAlign: 'center', flex: 1 }}>Hi {user}</h1>
+                    <input placeholder="Enter name" style={{width : "140px", height:"10px", marginRight: "6px"}} onChange={handleNamefilter} ></input>
                     <div style={{ marginRight: "6px" }}>
-                        <select id="branch" name="branch" onChange={handleFilter} required>
+                        <select id="branch" name="branch" onChange={handleFilter} required defaultValue="-1">
                             <option value="-1">Filter from branch</option>
                             <option value="11">Computer Science</option>
                             <option value="73">Mechanical Engineering</option>
@@ -64,7 +86,7 @@ const Home = () => {
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>S no.</th>
                             <th>Student ID</th>
                             <th>Name</th>
                             <th>Email</th>
