@@ -13,19 +13,6 @@ const Home = () => {
     const [nameFilter, setNameFilter] = useState("");
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        axios.get("http://localhost:8000/api/students/getAllstudents", { withCredentials: true })
-            .then(res => {
-                setStudents(res.data.students);
-                setUser(res.data.name);
-            })
-            .catch(error => {
-                console.error("Error fetching data:", error);
-                navigate("/signin");
-            })
-
-    }, []);
-
     const handleAddNew = () => {
         navigate("/addNewStudent");
     }
@@ -38,8 +25,12 @@ const Home = () => {
         axios.get("http://localhost:8000/api/students/getAllstudents", { params: { filter, nameFilter }, withCredentials: true })
             .then(res => {
                 setStudents(res.data.students);
+                setUser(res.data.name);
             })
             .catch(error => {
+                if(error.status == 401) {
+                    navigate("/signin");
+                }
                 setError(error.response.data.message);
                 setTimeout(() => {
                     setError(null);
